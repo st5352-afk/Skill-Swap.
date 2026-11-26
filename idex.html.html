@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Swap UTR | Exchange Skills, Expand Knowledge</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Montserrat for geometric headers -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        utr: {
+                            burgundy: '#6B2D2B',
+                            burgundyDark: '#52201E',
+                            burgundyLight: '#873A37',
+                            gold: '#C8AD7F',
+                            goldLight: '#DFCCB0',
+                            goldDark: '#A88E60',
+                            bg: '#F8F7F5',
+                            charcoal: '#2C2C2C'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Evitar desbordamiento horizontal en móviles y tablets */
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Scrollbar limpio para barras horizontales táctiles */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Simulador de Viewport (Móvil / Tablet / Escritorio) */
+        body.sim-mobile #viewport-wrapper {
+            max-width: 390px;
+            margin: 1rem auto;
+            border: 10px solid #2C2C2C;
+            border-radius: 2.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            overflow-x: hidden;
+            overflow-y: auto;
+            max-height: 88vh;
+            background: #F8F7F5;
+        }
+        body.sim-tablet #viewport-wrapper {
+            max-width: 768px;
+            margin: 1rem auto;
+            border: 10px solid #2C2C2C;
+            border-radius: 1.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            overflow-x: hidden;
+            overflow-y: auto;
+            max-height: 88vh;
+            background: #F8F7F5;
+        }
+        /* Forzar diseño móvil cuando se activa el modo prueba celular */
+        body.sim-mobile .desktop-only-sim { display: none !important; }
+        body.sim-mobile .mobile-only-sim { display: flex !important; }
+        body.sim-mobile #auth-screen { flex-direction: column !important; }
+        body.sim-mobile #auth-screen > div { width: 100% !important; padding: 1.5rem !important; }
+        body.sim-mobile #swaps-grid { grid-template-columns: 1fr !important; }
+        body.sim-tablet #swaps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        body.sim-tablet #auth-screen { flex-direction: column !important; }
+        body.sim-tablet #auth-screen > div { width: 100% !important; }
+    </style>
+</head>
+<body class="bg-utr-bg text-utr-charcoal font-sans antialiased selection:bg-utr-burgundy selection:text-white">
+
+    <!-- ==================== BARRA DE ADAPTACIÓN DE DISPOSITIVO (MÓVIL / TABLET / PC) ==================== -->
+    <div class="bg-utr-charcoal text-white px-3 py-2 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-stone-700 sticky top-0 z-50">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-semibold text-stone-200">Dispositivo detectado:</span>
+            <span id="detected-device-badge" class="px-2 py-0.5 rounded-md bg-utr-gold text-utr-charcoal font-bold text-[11px]">Escritorio</span>
+        </div>
+        <div class="flex items-center gap-1 bg-stone-800 p-1 rounded-xl">
+            <span class="text-[10px] text-stone-400 px-1.5 hidden sm:inline">Probar vista:</span>
+            <button onclick="setViewportMode('auto')" id="vp-auto" class="vp-btn px-2.5 py-1 rounded-lg font-semibold text-[11px] bg-utr-burgundy text-white transition flex items-center gap-1">
+                <i data-lucide="monitor" class="w-3.5 h-3.5"></i> Auto / PC
+            </button>
+            <button onclick="setViewportMode('tablet')" id="vp-tablet" class="vp-btn px-2.5 py-1 rounded-lg font-semibold text-[11px] text-stone-300 hover:text-white transition flex items-center gap-1">
+                <i data-lucide="tablet" class="w-3.5 h-3.5"></i> Tablet
+            </button>
+            <button onclick="setViewportMode('mobile')" id="vp-mobile" class="vp-btn px-2.5 py-1 rounded-lg font-semibold text-[11px] text-stone-300 hover:text-white transition flex items-center gap-1">
+                <i data-lucide="smartphone" class="w-3.5 h-3.5"></i> Celular
+            </button>
+        </div>
+    </div>
+
+    <div id="viewport-wrapper" class="w-full min-h-screen flex flex-col relative">
+
+    <!-- ==================== NOTIFICACIONES / TOASTS ==================== -->
+    <div id="toast-container" class="fixed bottom-20 md:bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ==================== PANTALLA 1: ONBOARDING / LOGIN & REGISTRO ==================== -->
+    <section id="auth-screen" class="min-h-screen flex flex-col lg:flex-row bg-white">
+        <!-- Panel Izquierdo: Identidad Visual UTR & Logo -->
+        <div class="lg:w-5/12 bg-utr-bg border-b lg:border-b-0 lg:border-r border-stone-200 p-6 sm:p-8 lg:p-14 flex flex-col justify-between relative overflow-hidden">
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-utr-burgundy/10 text-utr-burgundy text-xs font-semibold tracking-wide uppercase mb-5 sm:mb-8">
+                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                    Comunidad Oficial UTR
+                </div>
+
+                <!-- Logo Vectorial Fiel al Diseño Adjunto -->
+                <div class="flex flex-col items-start max-w-sm">
+                    <svg class="w-20 h-20 sm:w-28 sm:h-28 mb-3 sm:mb-4 drop-shadow-sm" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo Skill Swap">
+                        <!-- Estrella de cinco puntas entrelazada (Borgoña #6B2D2B y Dorado Arena #C8AD7F) -->
+                        <path d="M60 14L46 46L14 48C11.5 48.2 10.5 51.3 12.4 53L37 74L29 105" stroke="#6B2D2B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M60 14L74 46" stroke="#6B2D2B" stroke-width="8" stroke-linecap="round"/>
+                        <path d="M66 64L89 105C90.2 107.1 87.8 109.4 85.8 108.1L60 91" stroke="#6B2D2B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M74 46L106 48C108.5 48.2 109.5 51.3 107.6 53L83 74L87 92" stroke="#C8AD7F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M35 84L29 105C28.4 107.3 30.9 109.2 33 107.9L60 91" stroke="#C8AD7F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M37 74C46 66 53 60 60 56" stroke="#6B2D2B" stroke-width="8" stroke-linecap="round"/>
+                        <path d="M60 56C67 52 72 48 74 46" stroke="#C8AD7F" stroke-width="8" stroke-linecap="round"/>
+                    </svg>
+                    <h1 class="font-display font-extrabold text-3xl sm:text-5xl tracking-tight text-utr-burgundy leading-none">
+                        SKILL SWAP
+                    </h1>
+                    <p class="font-display font-bold text-[11px] sm:text-sm tracking-[0.16em] sm:tracking-[0.18em] text-utr-charcoal mt-2 uppercase">
+                        EXCHANGE SKILLS, EXPAND KNOWLEDGE
+                    </p>
+                </div>
+
+                <p class="mt-5 sm:mt-8 text-stone-600 text-sm sm:text-base leading-relaxed max-w-md">
+                    La red de trueque académico exclusivo para estudiantes de la <strong class="text-utr-charcoal">Universidad Tecnológica El Retoño</strong>. Comparte lo que dominas, aprende lo que necesitas y potencia tu promedio sin costo alguno.
+                </p>
+            </div>
+
+            <!-- Tarjetas de valor y acceso rápido -->
+            <div class="relative z-10 mt-6 sm:mt-10 space-y-4">
+                <div class="p-4 rounded-2xl bg-white border border-stone-200/80 shadow-xs">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-utr-burgundy">¿Quieres probarlo al instante?</span>
+                        <span class="text-xs px-2 py-0.5 rounded-md bg-utr-gold/30 text-utr-charcoal font-medium">Modo Demo</span>
+                    </div>
+                    <p class="text-xs text-stone-500 mb-3">Ingresa con el perfil precargado de <strong>Carlos Ramírez (5° TSU Mecatrónica - Automatización)</strong>.</p>
+                    <button onclick="quickDemoLogin()" type="button" class="w-full py-2.5 px-4 rounded-xl bg-utr-gold hover:bg-utr-goldDark text-utr-charcoal hover:text-white font-semibold text-sm transition flex items-center justify-center gap-2 shadow-xs">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        Acceso Rápido de Demostración
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Formularios de Acceso y Registro Institucional -->
+        <div class="lg:w-7/12 p-5 sm:p-10 lg:p-14 flex items-center justify-center bg-white">
+            <div class="w-full max-w-xl">
+                <!-- Tabs Login / Registro -->
+                <div class="flex p-1 bg-utr-bg rounded-2xl border border-stone-200 mb-6 sm:mb-8">
+                    <button id="tab-login-btn" onclick="switchAuthTab('login')" class="flex-1 py-2.5 text-sm font-semibold rounded-xl transition bg-white text-utr-burgundy shadow-sm">
+                        Iniciar Sesión
+                    </button>
+                    <button id="tab-register-btn" onclick="switchAuthTab('register')" class="flex-1 py-2.5 text-sm font-semibold rounded-xl transition text-stone-500 hover:text-utr-charcoal">
+                        Registro de Estudiante UTR
+                    </button>
+                </div>
+
+                <!-- FORMULARIO INICIAR SESIÓN -->
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1.5">Correo Institucional UTR o Matrícula</label>
+                        <div class="relative">
+                            <i data-lucide="mail" class="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5"></i>
+                            <input type="text" id="login-identifier" required placeholder="ej. 5473@utr.edu.mx o 5473" value="5473@utr.edu.mx"
+                                class="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-300 focus:border-utr-burgundy focus:ring-2 focus:ring-utr-burgundy/20 outline-none text-sm transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1.5">Contraseña</label>
+                        <div class="relative">
+                            <i data-lucide="lock" class="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5"></i>
+                            <input type="password" id="login-password" required placeholder="••••••••" value="utr2026"
+                                class="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-300 focus:border-utr-burgundy focus:ring-2 focus:ring-utr-burgundy/20 outline-none text-sm transition">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-utr-burgundy hover:bg-utr-burgundyDark text-white font-semibold text-sm transition shadow-sm flex items-center justify-center gap-2 mt-2">
+                        Entrar a Skill Swap UTR
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </form>
+
+                <!-- FORMULARIO REGISTRO ESTUDIANTE UTR -->
+                <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Nombre Completo *</label>
+                            <input type="text" id="reg-name" required placeholder="Ej. Sofía Hernández"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy focus:ring-2 focus:ring-utr-burgundy/20 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Matrícula UTR *</label>
+                            <input type="text" id="reg-matricula" required placeholder="Ej. 5473"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy focus:ring-2 focus:ring-utr-burgundy/20 outline-none text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Correo Institucional *</label>
+                            <input type="email" id="reg-email" required placeholder="matricula@utr.edu.mx"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy focus:ring-2 focus:ring-utr-burgundy/20 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Cuatrimestre *</label>
+                            <select id="reg-quarter" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white">
+                                <!-- Se llena dinámicamente según el Nivel -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Nivel Académico -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Nivel Académico Oficial UTR *</label>
+                        <select id="reg-level" onchange="updateRegisterCareers()" required
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy focus:ring-2 focus:ring-utr-burgundy/20 outline-none text-sm bg-white font-medium">
+                            <option value="TSU">TSU (Técnico Superior Universitario - 1° a 6° Cuatrimestre)</option>
+                            <option value="LIC_ING">Licenciaturas e Ingenierías (Continuidad - 7° a 11° Cuatrimestre)</option>
+                        </select>
+                    </div>
+
+                    <!-- Carrera y Especialidad Dinámica -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Carrera / Programa *</label>
+                            <select id="reg-career" onchange="updateRegisterSpecialties()" required
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Área / Especialidad *</label>
+                            <select id="reg-specialty" required
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white font-medium text-utr-burgundy">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Habilidad que dominas (Ofrezco)</label>
+                            <input type="text" id="reg-offer" required placeholder="Ej. Programación en Python / PLC"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">Materia que necesitas (Busco)</label>
+                            <input type="text" id="reg-seek" required placeholder="Ej. Inglés Conversacional B1"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-utr-burgundy hover:bg-utr-burgundyDark text-white font-semibold text-sm transition shadow-sm flex items-center justify-center gap-2 mt-2">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        Crear Cuenta Institucional UTR
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PANTALLA 2: APLICACIÓN PRINCIPAL (SPA) ==================== -->
+    <div id="app-shell" class="hidden min-h-screen flex flex-col">
+        
+        <!-- NAVBAR SUPERIOR -->
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-stone-200 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16 sm:h-20">
+                    <!-- Marca / Logo -->
+                    <div onclick="navigateTo('board')" class="flex items-center gap-3 cursor-pointer group">
+                        <svg class="w-10 h-10 shrink-0 transition-transform group-hover:scale-105" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M60 14L46 46L14 48C11.5 48.2 10.5 51.3 12.4 53L37 74L29 105" stroke="#6B2D2B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M60 14L74 46" stroke="#6B2D2B" stroke-width="9" stroke-linecap="round"/>
+                            <path d="M66 64L89 105C90.2 107.1 87.8 109.4 85.8 108.1L60 91" stroke="#6B2D2B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M74 46L106 48C108.5 48.2 109.5 51.3 107.6 53L83 74L87 92" stroke="#C8AD7F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M35 84L29 105C28.4 107.3 30.9 109.2 33 107.9L60 91" stroke="#C8AD7F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M37 74C46 66 53 60 60 56" stroke="#6B2D2B" stroke-width="9" stroke-linecap="round"/>
+                            <path d="M60 56C67 52 72 48 74 46" stroke="#C8AD7F" stroke-width="9" stroke-linecap="round"/>
+                        </svg>
+                        <div>
+                            <span class="font-display font-extrabold text-lg sm:text-xl text-utr-burgundy tracking-tight block leading-none">SKILL SWAP</span>
+                            <span class="text-[9px] sm:text-[10px] font-bold tracking-[0.15em] text-stone-500 uppercase block mt-0.5">EXCHANGE SKILLS, EXPAND KNOWLEDGE</span>
+                        </div>
+                    </div>
+
+                    <!-- Navegación Desktop -->
+                    <nav class="desktop-only-sim hidden md:flex items-center gap-1 bg-utr-bg p-1.5 rounded-2xl border border-stone-200/80">
+                        <button onclick="navigateTo('board')" data-nav="board" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+                            <i data-lucide="repeat" class="w-4 h-4"></i>
+                            Tablero de Trueque
+                        </button>
+                        <button onclick="navigateTo('community')" data-nav="community" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+                            <i data-lucide="book-open" class="w-4 h-4"></i>
+                            Comunidad y Consejos UTR
+                        </button>
+                        <button onclick="navigateTo('how')" data-nav="how" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+                            <i data-lucide="help-circle" class="w-4 h-4"></i>
+                            Cómo Funciona
+                        </button>
+                        <button onclick="navigateTo('profile')" data-nav="profile" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                            Mi Perfil
+                        </button>
+                    </nav>
+
+                    <!-- Acciones Derecha: Chats + Usuario -->
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button onclick="toggleChatDrawer()" class="relative p-2.5 rounded-xl bg-utr-bg hover:bg-stone-200/70 text-utr-charcoal transition border border-stone-200" title="Mis Chats y Sesiones">
+                            <i data-lucide="message-square" class="w-5 h-5 text-utr-burgundy"></i>
+                            <span id="chat-badge" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-utr-burgundy text-white text-[10px] font-bold flex items-center justify-center">2</span>
+                        </button>
+
+                        <div onclick="navigateTo('profile')" class="desktop-only-sim hidden sm:flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-2xl bg-utr-bg hover:bg-stone-200/60 border border-stone-200 cursor-pointer transition">
+                            <div id="nav-user-avatar" class="w-8 h-8 rounded-xl bg-utr-burgundy text-white font-bold text-xs flex items-center justify-center"></div>
+                            <div class="text-left">
+                                <p id="nav-user-name" class="text-xs font-bold text-utr-charcoal leading-tight"></p>
+                                <p id="nav-user-career" class="text-[10px] text-stone-500 leading-tight truncate max-w-[130px]"></p>
+                            </div>
+                        </div>
+
+                        <button onclick="logout()" class="p-2.5 rounded-xl text-stone-500 hover:text-red-600 hover:bg-red-50 transition" title="Cerrar Sesión">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==================== CONTENIDO PRINCIPAL DINÁMICO ==================== -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8 pb-24 md:pb-10">
+
+            <!-- VISTA 1: TABLERO DE TRUEQUE ACADÉMICO -->
+            <section id="view-board" class="space-y-5 sm:space-y-6">
+                <!-- Banner Superior + Botón Publicar -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div class="space-y-2 max-w-2xl">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-utr-gold/25 text-utr-burgundy text-xs font-bold">
+                            <span class="w-2 h-2 rounded-full bg-utr-burgundy animate-pulse"></span>
+                            Intercambio de Conocimientos Activo • Campus El Retoño
+                        </div>
+                        <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-utr-charcoal">
+                            Encuentra tu compañero ideal de estudio
+                        </h2>
+                        <p class="text-sm sm:text-base text-stone-600">
+                            Filtra por nivel académico (TSU o Ingeniería/Licenciatura), carrera y especialidad. Ofrece tus fortalezas y recibe asesoría personalizada gratuita.
+                        </p>
+                    </div>
+                    <button onclick="toggleNewSwapModal(true)" class="px-6 py-4 rounded-2xl bg-utr-burgundy hover:bg-utr-burgundyDark text-white font-bold text-sm shadow-md hover:shadow-lg transition flex items-center justify-center gap-2.5 shrink-0">
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-utr-goldLight"></i>
+                        Publicar Nuevo Trueque
+                    </button>
+                </div>
+
+                <!-- Buscador y Filtros Multinivel -->
+                <div class="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-xs space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                        <!-- Búsqueda por texto -->
+                        <div class="md:col-span-5 relative">
+                            <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5"></i>
+                            <input type="text" id="filter-search" oninput="renderSwaps()" placeholder="Buscar materia o habilidad (ej. PLC, Inglés, Python, Cálculo)..."
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy focus:ring-2 focus:ring-utr-burgundy/15 outline-none text-sm">
+                        </div>
+
+                        <!-- Filtro Nivel -->
+                        <div class="md:col-span-2">
+                            <select id="filter-level" onchange="handleFilterLevelChange()" class="w-full px-3 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white font-medium">
+                                <option value="ALL">Todos los Niveles</option>
+                                <option value="TSU">Nivel TSU (1°-6°)</option>
+                                <option value="LIC_ING">Lic. e Ing. (7°-11°)</option>
+                            </select>
+                        </div>
+
+                        <!-- Filtro Carrera -->
+                        <div class="md:col-span-3">
+                            <select id="filter-career" onchange="handleFilterCareerChange()" class="w-full px-3 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white">
+                                <option value="ALL">Todas las Carreras</option>
+                            </select>
+                        </div>
+
+                        <!-- Filtro Especialidad -->
+                        <div class="md:col-span-2">
+                            <select id="filter-specialty" onchange="renderSwaps()" class="w-full px-3 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white">
+                                <option value="ALL">Especialidad</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Chips rápidos y contador -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-100">
+                        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 w-full sm:w-auto">
+                            <span class="text-xs font-semibold text-stone-400 mr-1 shrink-0">Populares:</span>
+                            <button onclick="quickSearchTag('Inglés')" class="shrink-0 px-3 py-1.5 rounded-xl bg-utr-bg hover:bg-utr-gold/25 text-xs font-medium text-utr-charcoal transition">Inglés</button>
+                            <button onclick="quickSearchTag('PLC')" class="shrink-0 px-3 py-1.5 rounded-xl bg-utr-bg hover:bg-utr-gold/25 text-xs font-medium text-utr-charcoal transition">PLC / Automatización</button>
+                            <button onclick="quickSearchTag('Python')" class="shrink-0 px-3 py-1.5 rounded-xl bg-utr-bg hover:bg-utr-gold/25 text-xs font-medium text-utr-charcoal transition">Python / IA</button>
+                            <button onclick="quickSearchTag('Cálculo')" class="shrink-0 px-3 py-1.5 rounded-xl bg-utr-bg hover:bg-utr-gold/25 text-xs font-medium text-utr-charcoal transition">Cálculo</button>
+                            <button onclick="quickSearchTag('Blender')" class="shrink-0 px-3 py-1.5 rounded-xl bg-utr-bg hover:bg-utr-gold/25 text-xs font-medium text-utr-charcoal transition">Animación 3D</button>
+                        </div>
+                        <div class="flex items-center justify-between w-full sm:w-auto gap-3">
+                            <span id="swaps-count" class="text-xs font-semibold text-stone-500">Mostrando 7 trueques</span>
+                            <button onclick="resetFilters()" class="text-xs font-semibold text-utr-burgundy hover:underline">Limpiar filtros</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid de Tarjetas de Trueque -->
+                <div id="swaps-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <!-- Renderizado dinámico JS -->
+                </div>
+            </section>
+
+            <!-- VISTA 2: COMUNIDAD UTR (FOROS Y CONSEJOS POR NIVEL, CARRERA Y ESPECIALIDAD) -->
+            <section id="view-community" class="hidden space-y-6">
+                <!-- Encabezado Comunidad -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-utr-burgundy bg-utr-burgundy/10 px-3 py-1 rounded-full">Foro Académico Institucional</span>
+                        <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-utr-charcoal mt-2">
+                            Comunidad y Consejos UTR
+                        </h2>
+                        <p class="text-sm text-stone-600 mt-1 max-w-2xl">
+                            Explora recomendaciones de materias filtro, software clave, proyectos integradores y consejos de estadías organizados por la estructura académica real de la UTR.
+                        </p>
+                    </div>
+                    <button onclick="toggleNewTipModal(true)" class="px-5 py-3.5 rounded-2xl bg-utr-gold hover:bg-utr-goldDark text-utr-charcoal hover:text-white font-bold text-sm transition shadow-sm flex items-center justify-center gap-2 shrink-0">
+                        <i data-lucide="pen-square" class="w-4 h-4"></i>
+                        Compartir un Consejo
+                    </button>
+                </div>
+
+                <!-- Navegación Jerárquica Principal (3 Pestañas) -->
+                <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-stone-200 shadow-xs">
+                    <button onclick="selectCommunityTab('TSU')" id="comm-tab-TSU" class="flex-1 min-w-[160px] py-3 px-4 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 bg-utr-burgundy text-white shadow-xs">
+                        <i data-lucide="layers" class="w-4 h-4"></i>
+                        Carreras TSU (1° - 6°)
+                    </button>
+                    <button onclick="selectCommunityTab('LIC_ING')" id="comm-tab-LIC_ING" class="flex-1 min-w-[160px] py-3 px-4 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 text-stone-600 hover:bg-utr-bg">
+                        <i data-lucide="award" class="w-4 h-4"></i>
+                        Licenciaturas e Ingenierías (7° - 11°)
+                    </button>
+                    <button onclick="selectCommunityTab('ESTADIAS')" id="comm-tab-ESTADIAS" class="flex-1 min-w-[160px] py-3 px-4 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 text-stone-600 hover:bg-utr-bg">
+                        <i data-lucide="briefcase" class="w-4 h-4"></i>
+                        Estadías y Proyectos Integradores
+                    </button>
+                </div>
+
+                <!-- Breadcrumb / Ruta Jerárquica -->
+                <div id="community-breadcrumb" class="flex items-center gap-2 text-xs font-semibold text-stone-500 px-1">
+                    <!-- Dinámico -->
+                </div>
+
+                <!-- Contenedor Dinámico del Explorador de Comunidad -->
+                <div id="community-explorer" class="space-y-6">
+                    <!-- Se renderizan tarjetas de carreras -> especialidades -> muro de consejos -->
+                </div>
+            </section>
+
+            <!-- VISTA 3: CÓMO FUNCIONA -->
+            <section id="view-how" class="hidden space-y-8">
+                <div class="bg-utr-burgundy text-white rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden shadow-md">
+                    <div class="relative z-10 max-w-2xl mx-auto space-y-3">
+                        <span class="px-3 py-1 rounded-full bg-utr-gold text-utr-charcoal text-xs font-bold uppercase tracking-wider">Modelo Colaborativo UTR</span>
+                        <h2 class="font-display font-extrabold text-3xl sm:text-4xl">¿Cómo funciona Skill Swap?</h2>
+                        <p class="text-utr-goldLight text-sm sm:text-base">
+                            Un ecosistema diseñado para que ningún estudiante de El Retoño se quede atrás. Todos tenemos algo que enseñar y algo nuevo por aprender.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 3 Pasos Visuales -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-3xl p-7 border border-stone-200 shadow-xs relative">
+                        <div class="w-12 h-12 rounded-2xl bg-utr-burgundy text-white font-display font-extrabold text-xl flex items-center justify-center mb-5 shadow-sm">1</div>
+                        <h3 class="font-display font-bold text-lg text-utr-charcoal mb-2">Regístrate con tu matrícula UTR</h3>
+                        <p class="text-sm text-stone-600 leading-relaxed">
+                            Valida tu perfil seleccionando tu nivel académico real (TSU o Continuidad en Licenciatura/Ingeniería), tu carrera, especialidad y cuatrimestre actual.
+                        </p>
+                    </div>
+                    <div class="bg-white rounded-3xl p-7 border border-stone-200 shadow-xs relative">
+                        <div class="w-12 h-12 rounded-2xl bg-utr-gold text-utr-charcoal font-display font-extrabold text-xl flex items-center justify-center mb-5 shadow-sm">2</div>
+                        <h3 class="font-display font-bold text-lg text-utr-charcoal mb-2">Publica lo que sabes y necesitas</h3>
+                        <p class="text-sm text-stone-600 leading-relaxed">
+                            Crea una tarjeta de trueque indicando qué materia o herramienta dominas (ej. <em>Automatización PLC</em>) y en qué tema buscas apoyo (ej. <em>Inglés B1</em>).
+                        </p>
+                    </div>
+                    <div class="bg-white rounded-3xl p-7 border border-stone-200 shadow-xs relative">
+                        <div class="w-12 h-12 rounded-2xl bg-utr-burgundy text-white font-display font-extrabold text-xl flex items-center justify-center mb-5 shadow-sm">3</div>
+                        <h3 class="font-display font-bold text-lg text-utr-charcoal mb-2">Conecta y aprende gratis</h3>
+                        <p class="text-sm text-stone-600 leading-relaxed">
+                            Abre el chat directo, acuerda una sesión presencial en la Biblioteca o Cafetería UTR (o por videollamada) y califica tu experiencia al terminar.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Reglas de Oro de la Comunidad -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs">
+                    <h3 class="font-display font-bold text-lg text-utr-charcoal mb-4 flex items-center gap-2">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-utr-burgundy"></i>
+                        Código de Ética Académica UTR
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-stone-600">
+                        <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-utr-bg">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-utr-burgundy shrink-0 mt-0.5"></i>
+                            <p><strong>Cero cobros monetarios:</strong> Skill Swap es estrictamente gratuito y basado en reciprocidad estudiantil.</p>
+                        </div>
+                        <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-utr-bg">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-utr-burgundy shrink-0 mt-0.5"></i>
+                            <p><strong>Asesoría, no plagio:</strong> El objetivo es explicar conceptos y guiar prácticas, respetando la integridad académica de la UTR.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISTA 4: PERFIL DEL ESTUDIANTE -->
+            <section id="view-profile" class="hidden space-y-6">
+                <div class="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-xs">
+                    <!-- Portada institucional -->
+                    <div class="h-32 bg-gradient-to-r from-utr-burgundy via-utr-burgundyDark to-utr-charcoal relative">
+                        <div class="absolute right-6 bottom-4 text-right hidden sm:block">
+                            <span class="text-xs font-bold tracking-widest text-utr-goldLight uppercase">Universidad Tecnológica El Retoño</span>
+                        </div>
+                    </div>
+                    <div class="px-6 sm:px-8 pb-8">
+                        <div class="flex flex-col sm:flex-row sm:items-end justify-between -mt-12 gap-4 mb-6">
+                            <div class="flex items-end gap-4">
+                                <div id="profile-avatar" class="w-24 h-24 rounded-3xl bg-utr-gold text-utr-charcoal font-display font-extrabold text-3xl flex items-center justify-center border-4 border-white shadow-md"></div>
+                                <div class="pb-1">
+                                    <h2 id="profile-name" class="font-display font-extrabold text-2xl text-utr-charcoal"></h2>
+                                    <p id="profile-email" class="text-sm text-stone-500"></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3.5 py-1.5 rounded-xl bg-utr-burgundy/10 text-utr-burgundy font-bold text-xs" id="profile-matricula-badge"></span>
+                                <span class="px-3.5 py-1.5 rounded-xl bg-utr-gold/25 text-utr-charcoal font-bold text-xs flex items-center gap-1">
+                                    <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500 text-amber-500"></i> 4.9 (8 trueques)
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Ficha Académica Oficial UTR -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 rounded-2xl bg-utr-bg border border-stone-200/80 mb-6">
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Nivel Académico</span>
+                                <p id="profile-level" class="text-sm font-bold text-utr-charcoal mt-0.5"></p>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Carrera / Programa</span>
+                                <p id="profile-career" class="text-sm font-bold text-utr-charcoal mt-0.5"></p>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Especialidad / Área</span>
+                                <p id="profile-specialty" class="text-sm font-bold text-utr-burgundy mt-0.5"></p>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Cuatrimestre Actual</span>
+                                <p id="profile-quarter" class="text-sm font-bold text-utr-charcoal mt-0.5"></p>
+                            </div>
+                        </div>
+
+                        <!-- Habilidades e Historial -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-5 rounded-2xl border border-stone-200 space-y-3">
+                                <h3 class="font-bold text-sm uppercase tracking-wider text-utr-charcoal flex items-center gap-2">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-utr-goldDark"></i>
+                                    Mis Habilidades Registradas
+                                </h3>
+                                <div class="space-y-2">
+                                    <div class="p-3 rounded-xl bg-utr-gold/20 border border-utr-gold/40">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-utr-burgundy block">OFREZCO ASESORÍA EN:</span>
+                                        <p id="profile-offer" class="text-sm font-semibold text-utr-charcoal mt-0.5"></p>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-utr-burgundy/10 border border-utr-burgundy/20">
+                                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-utr-burgundy block">BUSCO APRENDER:</span>
+                                        <p id="profile-seek" class="text-sm font-semibold text-utr-charcoal mt-0.5"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-5 rounded-2xl border border-stone-200 space-y-3">
+                                <h3 class="font-bold text-sm uppercase tracking-wider text-utr-charcoal flex items-center gap-2">
+                                    <i data-lucide="calendar-check" class="w-4 h-4 text-utr-burgundy"></i>
+                                    Sesiones Agendadas e Historial
+                                </h3>
+                                <div id="profile-sessions-list" class="space-y-2.5 text-sm">
+                                    <!-- Renderizado dinámico -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="bg-white border-t border-stone-200 py-6 mt-12 mb-16 md:mb-0">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500 text-center sm:text-left">
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span class="font-display font-bold text-utr-burgundy">SKILL SWAP</span>
+                    <span>•</span>
+                    <span>Comunidad Estudiantil Universidad Tecnológica El Retoño (UTR)</span>
+                </div>
+                <p>Exchange Skills, Expand Knowledge • Modelo de Trueque Académico Gratuito</p>
+            </div>
+        </footer>
+
+        <!-- BARRA DE NAVEGACIÓN FIJA INFERIOR ESTILO APP MÓVIL (CELULAR / TABLET) -->
+        <nav class="mobile-only-sim md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur border-t border-stone-200 px-2 py-2 flex justify-around items-center shadow-[0_-4px_15px_rgba(0,0,0,0.06)]">
+            <button onclick="navigateTo('board')" data-nav="board" class="nav-btn-mob flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[11px] font-semibold min-w-[68px]">
+                <i data-lucide="repeat" class="w-5 h-5 mb-0.5"></i>
+                Trueques
+            </button>
+            <button onclick="navigateTo('community')" data-nav="community" class="nav-btn-mob flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[11px] font-semibold min-w-[68px]">
+                <i data-lucide="book-open" class="w-5 h-5 mb-0.5"></i>
+                Foros UTR
+            </button>
+            <button onclick="toggleNewSwapModal(true)" class="flex flex-col items-center justify-center -mt-5">
+                <span class="w-12 h-12 rounded-2xl bg-utr-burgundy text-white flex items-center justify-center shadow-lg border-4 border-white">
+                    <i data-lucide="plus" class="w-6 h-6 text-utr-goldLight"></i>
+                </span>
+                <span class="text-[10px] font-bold text-utr-burgundy mt-0.5">Publicar</span>
+            </button>
+            <button onclick="navigateTo('how')" data-nav="how" class="nav-btn-mob flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[11px] font-semibold min-w-[68px]">
+                <i data-lucide="help-circle" class="w-5 h-5 mb-0.5"></i>
+                Guía
+            </button>
+            <button onclick="navigateTo('profile')" data-nav="profile" class="nav-btn-mob flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-[11px] font-semibold min-w-[68px]">
+                <i data-lucide="user" class="w-5 h-5 mb-0.5"></i>
+                Perfil
+            </button>
+        </nav>
+    </div>
+
+    </div> <!-- Cierre de #viewport-wrapper -->
+
+    <!-- ==================== MODAL 1: PUBLICAR NUEVO TRUEQUE ==================== -->
+    <div id="modal-new-swap" class="fixed inset-0 z-40 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-fade-in">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h3 class="font-display font-extrabold text-xl text-utr-charcoal">Publicar Trueque Académico</h3>
+                    <p class="text-xs text-stone-500">Se publicará con tu perfil institucional UTR actual</p>
+                </div>
+                <button onclick="toggleNewSwapModal(false)" class="p-2 rounded-xl hover:bg-stone-100 text-stone-500">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleCreateSwap(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-utr-burgundy mb-1">¿Qué necesitas aprender? (BUSCO) *</label>
+                    <input type="text" id="swap-seek-input" required placeholder="Ej. Conversación en Inglés B1 / Cálculo Integral"
+                        class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-utr-goldDark mb-1">¿Qué enseñas a cambio? (OFREZCO) *</label>
+                    <input type="text" id="swap-offer-input" required placeholder="Ej. Programación de PLC Siemens / Excel Avanzado"
+                        class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">Descripción o detalles de la asesoría *</label>
+                    <textarea id="swap-desc-input" rows="3" required placeholder="Explica brevemente qué temas quieres repasar y cómo puedes ayudar a tu compañero..."
+                        class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">Modalidad Preferida *</label>
+                    <select id="swap-modality-input" class="w-full px-4 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white">
+                        <option value="Presencial (Biblioteca / Cafetería UTR)">Presencial (Biblioteca / Cafetería UTR)</option>
+                        <option value="Videollamada (Google Meet / Teams)">Videollamada (Google Meet / Teams)</option>
+                        <option value="Híbrida (Campus UTR o En línea)">Híbrida (Campus UTR o En línea)</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="toggleNewSwapModal(false)" class="px-4 py-2.5 rounded-xl border border-stone-300 text-sm font-semibold text-stone-600 hover:bg-stone-50">Cancelar</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-utr-burgundy hover:bg-utr-burgundyDark text-white text-sm font-bold shadow">Publicar Trueque</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: PUBLICAR CONSEJO EN COMUNIDAD ==================== -->
+    <div id="modal-new-tip" class="fixed inset-0 z-40 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-stone-200">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h3 class="font-display font-extrabold text-xl text-utr-charcoal">Compartir Consejo UTR</h3>
+                    <p class="text-xs text-stone-500">Ayuda a otros alumnos de tu carrera o de nuevo ingreso</p>
+                </div>
+                <button onclick="toggleNewTipModal(false)" class="p-2 rounded-xl hover:bg-stone-100 text-stone-500">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleCreateTip(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">Categoría / Nivel *</label>
+                    <select id="tip-level" onchange="updateTipCareers()" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white">
+                        <option value="TSU">Carreras TSU (1° a 6°)</option>
+                        <option value="LIC_ING">Licenciaturas e Ingenierías (7° a 11°)</option>
+                        <option value="ESTADIAS">Consejos de Estadías y Proyectos Integradores</option>
+                    </select>
+                </div>
+
+                <div id="tip-career-wrapper" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">Carrera *</label>
+                        <select id="tip-career" onchange="updateTipSpecialties()" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">Especialidad *</label>
+                        <select id="tip-specialty" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">Título del Consejo *</label>
+                    <input type="text" id="tip-title" required placeholder="Ej. Software indispensable antes de 4° cuatrimestre"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">Etiqueta temática</label>
+                    <select id="tip-tag" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm bg-white">
+                        <option value="Materia Filtro">Materia Filtro</option>
+                        <option value="Software Recomendado">Software Recomendado</option>
+                        <option value="Proyecto Integrador">Proyecto Integrador</option>
+                        <option value="Trámite Estadías">Trámite Estadías</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">Tu recomendación detallada *</label>
+                    <textarea id="tip-content" rows="3" required placeholder="Comparte tu experiencia, libros, canales o tips con tus compañeros UTR..."
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="toggleNewTipModal(false)" class="px-4 py-2.5 rounded-xl border border-stone-300 text-sm font-semibold text-stone-600">Cancelar</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-utr-burgundy hover:bg-utr-burgundyDark text-white text-sm font-bold shadow">Publicar Consejo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== DRAWER LATERAL: CHAT Y COORDINACIÓN DE SESIONES ==================== -->
+    <div id="chat-drawer" class="fixed inset-0 z-50 hidden">
+        <div onclick="toggleChatDrawer()" class="absolute inset-0 bg-black/40 backdrop-blur-xs"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl flex flex-col border-l border-stone-200">
+            <!-- Header Chat -->
+            <div class="p-4 bg-utr-burgundy text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div id="chat-partner-avatar" class="w-10 h-10 rounded-xl bg-utr-gold text-utr-charcoal font-bold text-sm flex items-center justify-center">AL</div>
+                    <div>
+                        <h4 id="chat-partner-name" class="font-bold text-sm">Selecciona un compañero</h4>
+                        <p id="chat-partner-career" class="text-[11px] text-utr-goldLight truncate max-w-[220px]">Chat directo UTR</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="toggleScheduleBox()" class="px-3 py-1.5 rounded-xl bg-utr-gold text-utr-charcoal font-bold text-xs hover:bg-utr-goldLight transition flex items-center gap-1">
+                        <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                        Agendar
+                    </button>
+                    <button onclick="toggleChatDrawer()" class="p-1.5 rounded-xl hover:bg-white/10 text-white">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Selector rápido de conversaciones activas -->
+            <div id="chat-contacts-bar" class="px-3 py-2 bg-utr-bg border-b border-stone-200 flex gap-2 overflow-x-auto">
+                <!-- Contactos dinámicos -->
+            </div>
+
+            <!-- Panel Desplegable para Agendar Sesión -->
+            <div id="schedule-session-box" class="hidden p-4 bg-utr-gold/15 border-b border-utr-gold/40 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-utr-burgundy">Coordinar Sesión de Trueque</span>
+                    <button onclick="toggleScheduleBox()" class="text-xs text-stone-500 hover:text-utr-charcoal">Cerrar</button>
+                </div>
+                <form onsubmit="handleScheduleSession(event)" class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" id="sched-date" required class="px-3 py-2 rounded-xl border border-stone-300 text-xs bg-white">
+                        <input type="time" id="sched-time" required value="13:00" class="px-3 py-2 rounded-xl border border-stone-300 text-xs bg-white">
+                    </div>
+                    <select id="sched-place" class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs bg-white">
+                        <option value="Biblioteca UTR - Mesa Planta Alta">Biblioteca UTR - Mesa Planta Alta</option>
+                        <option value="Cafetería Central UTR">Cafetería Central UTR</option>
+                        <option value="Edificio de Docencia 2 - Sala de Estudio">Edificio de Docencia 2 - Sala de Estudio</option>
+                        <option value="Videollamada Google Meet">Videollamada Google Meet</option>
+                    </select>
+                    <button type="submit" class="w-full py-2 rounded-xl bg-utr-burgundy text-white font-bold text-xs hover:bg-utr-burgundyDark transition">
+                        Confirmar y Enviar Invitación de Sesión
+                    </button>
+                </form>
+            </div>
+
+            <!-- Mensajes del Chat -->
+            <div id="chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 bg-stone-50">
+                <!-- Mensajes dinámicos -->
+            </div>
+
+            <!-- Mensajes Rápidos Sugeridos -->
+            <div class="px-3 py-2 bg-white border-t border-stone-100 flex gap-1.5 overflow-x-auto">
+                <button onclick="sendQuickMessage('¡Hola! Vi tu publicación en Skill Swap, ¿hacemos trueque?')" class="shrink-0 px-2.5 py-1 rounded-lg bg-utr-bg hover:bg-utr-gold/25 text-[11px] font-medium text-utr-charcoal border border-stone-200">
+                    👋 ¿Hacemos trueque?
+                </button>
+                <button onclick="sendQuickMessage('¿Te queda bien vernos hoy en la Biblioteca UTR a la 1:00 PM?')" class="shrink-0 px-2.5 py-1 rounded-lg bg-utr-bg hover:bg-utr-gold/25 text-[11px] font-medium text-utr-charcoal border border-stone-200">
+                    📚 Biblioteca UTR 1:00 PM
+                </button>
+                <button onclick="sendQuickMessage('¡Va! Yo llevo mi laptop con el software instalado.')" class="shrink-0 px-2.5 py-1 rounded-lg bg-utr-bg hover:bg-utr-gold/25 text-[11px] font-medium text-utr-charcoal border border-stone-200">
+                    💻 Llevo mi laptop
+                </button>
+            </div>
+
+            <!-- Input Enviar Mensaje -->
+            <form onsubmit="handleSendMessage(event)" class="p-3 bg-white border-t border-stone-200 flex gap-2">
+                <input type="text" id="chat-input" placeholder="Escribe un mensaje a tu compañero..." required
+                    class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-utr-burgundy outline-none text-sm">
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-utr-burgundy hover:bg-utr-burgundyDark text-white font-semibold transition">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== LÓGICA DE DATOS Y APLICACIÓN ==================== -->
+    <script>
+        // 1. ESTRUCTURA ACADÉMICA OFICIAL DE LA UTR (Exacta según requerimientos)
+        const UTR_ACADEMIC_STRUCTURE = {
+            TSU: {
+                label: "TSU (Técnico Superior Universitario)",
+                quarters: ["1° Cuatrimestre", "2° Cuatrimestre", "3° Cuatrimestre", "4° Cuatrimestre", "5° Cuatrimestre", "6° Cuatrimestre (Estadías)"],
+                careers: {
+                    "Administración": {
+                        icon: "users",
+                        specialties: ["Capital Humano"]
+                    },
+                    "Desarrollo de Negocios": {
+                        icon: "trending-up",
+                        specialties: ["Mercadotecnia"]
+                    },
+                    "Diseño Digital": {
+                        icon: "palette",
+                        specialties: ["Área Animación"]
+                    },
+                    "Lengua Inglesa": {
+                        icon: "languages",
+                        specialties: ["Lengua Inglesa"]
+                    },
+                    "Mecatrónica": {
+                        icon: "cpu",
+                        specialties: ["Automatización", "Manufactura Flexible"]
+                    },
+                    "Ciencia de Datos": {
+                        icon: "brain-circuit",
+                        specialties: ["Área Inteligencia Artificial"]
+                    },
+                    "Tecnologías de la Información": {
+                        icon: "code-2",
+                        specialties: ["Desarrollo de Software Multiplataforma"]
+                    }
+                }
+            },
+            LIC_ING: {
+                label: "Licenciaturas e Ingenierías (Continuidad)",
+                quarters: ["7° Cuatrimestre", "8° Cuatrimestre", "9° Cuatrimestre", "10° Cuatrimestre", "11° Cuatrimestre (Estadías)"],
+                careers: {
+                    "Licenciatura en Gestión de Capital Humano": {
+                        icon: "briefcase",
+                        specialties: ["Gestión de Capital Humano (Continuidad Administración)"]
+                    },
+                    "Licenciatura en Educación (Enseñanza del Inglés)": {
+                        icon: "graduation-cap",
+                        specialties: ["Enseñanza del Inglés (Continuidad Lengua Inglesa)"]
+                    },
+                    "Licenciatura en Negocios y Mercadotecnia": {
+                        icon: "megaphone",
+                        specialties: ["Negocios y Mercadotecnia (Continuidad Desarrollo de Negocios)"]
+                    },
+                    "Licenciatura en Diseño Digital y Producción Audiovisual": {
+                        icon: "film",
+                        specialties: ["Diseño Digital y Producción Audiovisual"]
+                    },
+                    "Ingeniería en Mecatrónica": {
+                        icon: "cog",
+                        specialties: ["Ingeniería en Mecatrónica"]
+                    },
+                    "Ingeniería en Tecnologías de la Información e Innovación Digital": {
+                        icon: "terminal",
+                        specialties: ["TI e Innovación Digital"]
+                    }
+                }
+            }
+        };
+
+        // 2. ESTADO GLOBAL DE LA APLICACIÓN CON DATOS PRECARGADOS REALISTAS
+        let currentUser = null;
+
+        let swapsData = [
+            {
+                id: 1,
+                studentName: "Carlos Eduardo Ramírez",
+                matricula: "5473",
+                avatar: "CR",
+                level: "TSU",
+                career: "Mecatrónica",
+                specialty: "Automatización",
+                quarter: "5° Cuatrimestre",
+                rating: 4.9,
+                seek: "Inglés Conversacional B1 (Preparación entrevista estadías)",
+                offer: "Programación de PLC Siemens TIA Portal y Neumática",
+                description: "Tengo examen oral de inglés la próxima semana y busco practicar conversación. A cambio te ayudo desde cero con diagramas escalera y PLC.",
+                modality: "Presencial (Biblioteca / Cafetería UTR)"
+            },
+            {
+                id: 2,
+                studentName: "Valeria Alejandra Torres",
+                matricula: "5189",
+                avatar: "VT",
+                level: "LIC_ING",
+                career: "Licenciatura en Negocios y Mercadotecnia",
+                specialty: "Negocios y Mercadotecnia (Continuidad Desarrollo de Negocios)",
+                quarter: "8° Cuatrimestre",
+                rating: 5.0,
+                seek: "Análisis de Datos en Excel Avanzado / Power BI",
+                offer: "Branding, Pitch para Proyecto Integrador y Estrategia Digital",
+                description: "Te ayudo a estructurar la presentación ejecutiva y modelo de negocios de tu proyecto integrador si me apoyas con dashboards en Power BI.",
+                modality: "Híbrida (Campus UTR o En línea)"
+            },
+            {
+                id: 3,
+                studentName: "Diego Armando López",
+                matricula: "5612",
+                avatar: "DL",
+                level: "TSU",
+                career: "Mecatrónica",
+                specialty: "Manufactura Flexible",
+                quarter: "4° Cuatrimestre",
+                rating: 4.8,
+                seek: "Cálculo Diferencial e Integral (Ecuaciones)",
+                offer: "Diseño CAD en SolidWorks y Control Numérico CNC",
+                description: "Domino ensambles y planos en SolidWorks para piezas mecánicas. Busco alguien paciente que me explique derivadas e integrales.",
+                modality: "Presencial (Biblioteca / Cafetería UTR)"
+            },
+            {
+                id: 4,
+                studentName: "Fernanda Sofía Méndez",
+                matricula: "4930",
+                avatar: "FM",
+                level: "LIC_ING",
+                career: "Ingeniería en Tecnologías de la Información e Innovación Digital",
+                specialty: "TI e Innovación Digital",
+                quarter: "9° Cuatrimestre",
+                rating: 4.9,
+                seek: "Redacción Académica y Metodología para Memoria de Estadías",
+                offer: "Desarrollo Web Full-Stack (React, Node.js) y Bases de Datos SQL",
+                description: "Puedo asesorarte en arquitectura de software o corregir bugs de tu app web a cambio de tips de redacción técnica.",
+                modality: "Videollamada (Google Meet / Teams)"
+            },
+            {
+                id: 5,
+                studentName: "Mateo Sebastián Ruiz",
+                matricula: "5804",
+                avatar: "MR",
+                level: "TSU",
+                career: "Ciencia de Datos",
+                specialty: "Área Inteligencia Artificial",
+                quarter: "3° Cuatrimestre",
+                rating: 4.7,
+                seek: "Modelado 3D y Texturizado en Blender",
+                offer: "Python desde cero, Pandas y Machine Learning básico",
+                description: "Quiero integrar un entorno 3D en un proyecto personal. Te enseño a programar en Python y limpiar datasets fácilmente.",
+                modality: "Presencial (Biblioteca / Cafetería UTR)"
+            },
+            {
+                id: 6,
+                studentName: "Camila Guadalupe Ortiz",
+                matricula: "5741",
+                avatar: "CO",
+                level: "TSU",
+                career: "Diseño Digital",
+                specialty: "Área Animación",
+                quarter: "4° Cuatrimestre",
+                rating: 5.0,
+                seek: "Finanzas básicas y Costos para Freelancers",
+                offer: "Ilustración Vectorial, After Effects y Rigging 2D",
+                description: "Si eres de Administración o Negocios y me ayudas a calcular cotizaciones e impuestos básicos, te diseño toda la identidad gráfica de tu equipo.",
+                modality: "Híbrida (Campus UTR o En línea)"
+            },
+            {
+                id: 7,
+                studentName: "Luis Ángel Domínguez",
+                matricula: "5322",
+                avatar: "LD",
+                level: "TSU",
+                career: "Lengua Inglesa",
+                specialty: "Lengua Inglesa",
+                quarter: "5° Cuatrimestre",
+                rating: 4.9,
+                seek: "Desarrollo Móvil con Flutter o Android Studio",
+                offer: "Tutoría personalizada de Inglés (Gramática, Speaking y TOEFL)",
+                description: "Preparo alumnos para certificaciones de inglés en la UTR. Busco aprender lo básico de apps móviles para mi proyecto integrador.",
+                modality: "Presencial (Biblioteca / Cafetería UTR)"
+            }
+        ];
+
+        let communityTips = [
+            {
+                id: 101,
+                level: "TSU",
+                career: "Mecatrónica",
+                specialty: "Automatización",
+                author: "Carlos E. Ramírez (5° TSU)",
+                tag: "Software Recomendado",
+                title: "Instalen TIA Portal V17 y FluidSIM con tiempo antes de 4°",
+                content: "En cuarto cuatrimestre la carga de prácticas de laboratorio sube muchísimo. Tener FluidSIM para simular neumática y electroneumática en tu laptop te ahorra horas en el taller.",
+                likes: 24
+            },
+            {
+                id: 102,
+                level: "TSU",
+                career: "Mecatrónica",
+                specialty: "Manufactura Flexible",
+                author: "Diego A. López (4° TSU)",
+                tag: "Materia Filtro",
+                title: "Domina tolerancias geométricas y SolidWorks desde 2°",
+                content: "Para Manufactura Flexible es clave entender interpretación de planos y códigos G y M para CNC. Practiquen los ejercicios de tornos virtuales antes del examen práctico.",
+                likes: 19
+            },
+            {
+                id: 103,
+                level: "TSU",
+                career: "Tecnologías de la Información",
+                specialty: "Desarrollo de Software Multiplataforma",
+                author: "Kevin Morales (6° TSU)",
+                tag: "Proyecto Integrador",
+                title: "Control de versiones con Git y GitHub en equipo",
+                content: "No se pasen el código por WhatsApp en el Proyecto Integrador. Aprendan a usar ramas (branches) y Pull Requests desde el primer parcial; los profesores lo evalúan muchísimo.",
+                likes: 31
+            },
+            {
+                id: 104,
+                level: "TSU",
+                career: "Ciencia de Datos",
+                specialty: "Área Inteligencia Artificial",
+                author: "Mateo S. Ruiz (3° TSU)",
+                tag: "Materia Filtro",
+                title: "Álgebra Lineal y Estadística son la base de todo",
+                content: "No subestimen matrices y probabilidad en los primeros cuatris; cuando lleguen a redes neuronales y regresión lineal les va a facilitar la vida al 100%.",
+                likes: 15
+            },
+            {
+                id: 105,
+                level: "LIC_ING",
+                career: "Licenciatura en Negocios y Mercadotecnia",
+                specialty: "Negocios y Mercadotecnia (Continuidad Desarrollo de Negocios)",
+                author: "Valeria A. Torres (8° Lic.)",
+                tag: "Proyecto Integrador",
+                title: "Validación real con clientes antes de lanzar campañas",
+                content: "En continuidad de licenciatura los proyectos exigen métricas reales. Usen Google Analytics y encuestas segmentadas desde la semana 3.",
+                likes: 22
+            },
+            {
+                id: 106,
+                level: "LIC_ING",
+                career: "Ingeniería en Tecnologías de la Información e Innovación Digital",
+                specialty: "TI e Innovación Digital",
+                author: "Fernanda S. Méndez (9° Ing.)",
+                tag: "Software Recomendado",
+                title: "Docker y despliegue en la nube para sus proyectos finales",
+                content: "Aprender a contenerizar su backend y base de datos en Docker hace que la presentación final funcione sin fallos en cualquier proyector de la UTR.",
+                likes: 28
+            },
+            {
+                id: 107,
+                level: "ESTADIAS",
+                career: "General UTR",
+                specialty: "6° TSU y 11° Ingeniería/Licenciatura",
+                author: "Coordinación Estudiantil & Egresados",
+                tag: "Trámite Estadías",
+                title: "Checklist clave 1 cuatrimestre antes de iniciar Estadías",
+                content: "1) Tener tu seguro facultativo IMSS vigente y descargado. 2) Actualizar tu CV en inglés y español. 3) Acercarte a Vinculación UTR desde el primer mes de 5° o 10° cuatrimestre para postularte a vacantes del parque industrial.",
+                likes: 47
+            },
+            {
+                id: 108,
+                level: "ESTADIAS",
+                career: "General UTR",
+                specialty: "6° TSU y 11° Ingeniería/Licenciatura",
+                author: "Sofía H. (Egresada Ing. Mecatrónica)",
+                tag: "Proyecto Integrador",
+                title: "Cómo redactar tus objetivos y cronograma de Memoria",
+                content: "Define entregables medibles desde la semana 1 con tu asesor empresarial y académico. Documenta evidencias fotográficas cada viernes para no saturarte al final del cuatrimestre.",
+                likes: 34
+            }
+        ];
+
+        // Estado de chats y sesiones
+        let activeChatPartner = swapsData[1];
+        let chatsHistory = {
+            "Valeria Alejandra Torres": [
+                { sender: "partner", text: "¡Hola Carlos! Vi que eres de Mecatrónica Automatización. ¿Crees que me puedas apoyar con unas gráficas en Excel/Power BI?", time: "10:15 AM" },
+                { sender: "me", text: "¡Hola Valeria! Sí claro, con gusto. A mí me serviría muchísimo tu ayuda para estructurar el Pitch de mi proyecto.", time: "10:18 AM" }
+            ],
+            "Luis Ángel Domínguez": [
+                { sender: "partner", text: "Qué onda bro, cuando gustes practicamos tu speaking en inglés en la biblioteca de la UTR.", time: "Ayer" }
+            ]
+        };
+
+        let scheduledSessions = [
+            {
+                partner: "Valeria Alejandra Torres",
+                topic: "Asesoría Power BI ↔ Pitch Proyecto Integrador",
+                date: "2026-11-28",
+                time: "13:00",
+                place: "Biblioteca UTR - Mesa Planta Alta"
+            }
+        ];
+
+        // Estado de navegación en Comunidad
+        let commState = {
+            tab: "TSU",
+            selectedCareer: null,
+            selectedSpecialty: null
+        };
+
+        // 3. INICIALIZACIÓN AL CARGAR LA PÁGINA Y DETECCIÓN DE DISPOSITIVO
+        window.onload = function() {
+            lucide.createIcons();
+            updateRegisterCareers();
+            populateFilterCareers();
+            updateTipCareers();
+            detectCurrentDevice();
+            window.addEventListener('resize', detectCurrentDevice);
+        };
+
+        function detectCurrentDevice() {
+            const badge = document.getElementById('detected-device-badge');
+            if (!badge) return;
+            const width = window.innerWidth;
+            if (document.body.classList.contains('sim-mobile') || width < 640) {
+                badge.textContent = `Celular (${width}px)`;
+            } else if (document.body.classList.contains('sim-tablet') || (width >= 640 && width < 1024)) {
+                badge.textContent = `Tablet (${width}px)`;
+            } else {
+                badge.textContent = `Escritorio (${width}px)`;
+            }
+        }
+
+        function setViewportMode(mode) {
+            document.body.classList.remove('sim-mobile', 'sim-tablet');
+            document.querySelectorAll('.vp-btn').forEach(btn => {
+                btn.className = "vp-btn px-2.5 py-1 rounded-lg font-semibold text-[11px] text-stone-300 hover:text-white transition flex items-center gap-1";
+            });
+            const activeBtn = document.getElementById(`vp-${mode}`);
+            if (activeBtn) {
+                activeBtn.className = "vp-btn px-2.5 py-1 rounded-lg font-semibold text-[11px] bg-utr-burgundy text-white transition flex items-center gap-1";
+            }
+
+            if (mode === 'mobile') {
+                document.body.classList.add('sim-mobile');
+                showToast("Vista adaptada a Celular (390px)");
+            } else if (mode === 'tablet') {
+                document.body.classList.add('sim-tablet');
+                showToast("Vista adaptada a Tablet (768px)");
+            } else {
+                showToast("Vista responsiva automática activada");
+            }
+            detectCurrentDevice();
+            lucide.createIcons();
+        }
+
+        // 4. LÓGICA DE AUTENTICACIÓN Y FORMULARIOS DINÁMICOS
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const btnLogin = document.getElementById('tab-login-btn');
+            const btnReg = document.getElementById('tab-register-btn');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                btnLogin.className = "flex-1 py-2.5 text-sm font-semibold rounded-xl transition bg-white text-utr-burgundy shadow-sm";
+                btnReg.className = "flex-1 py-2.5 text-sm font-semibold rounded-xl transition text-stone-500 hover:text-utr-charcoal";
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                btnReg.className = "flex-1 py-2.5 text-sm font-semibold rounded-xl transition bg-white text-utr-burgundy shadow-sm";
+                btnLogin.className = "flex-1 py-2.5 text-sm font-semibold rounded-xl transition text-stone-500 hover:text-utr-charcoal";
+            }
+        }
+
+        function updateRegisterCareers() {
+            const level = document.getElementById('reg-level').value;
+            const careerSelect = document.getElementById('reg-career');
+            const quarterSelect = document.getElementById('reg-quarter');
+
+            // Actualizar cuatrimestres según nivel
+            quarterSelect.innerHTML = UTR_ACADEMIC_STRUCTURE[level].quarters
+                .map(q => `<option value="${q}">${q}</option>`).join('');
+
+            // Actualizar carreras según nivel
+            const careers = Object.keys(UTR_ACADEMIC_STRUCTURE[level].careers);
+            careerSelect.innerHTML = careers
+                .map(c => `<option value="${c}">${c}</option>`).join('');
+
+            updateRegisterSpecialties();
+        }
+
+        function updateRegisterSpecialties() {
+            const level = document.getElementById('reg-level').value;
+            const career = document.getElementById('reg-career').value;
+            const specSelect = document.getElementById('reg-specialty');
+
+            const specialties = UTR_ACADEMIC_STRUCTURE[level].careers[career]?.specialties || [];
+            specSelect.innerHTML = specialties
+                .map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        function quickDemoLogin() {
+            currentUser = {
+                name: "Carlos Eduardo Ramírez",
+                matricula: "5473",
+                email: "5473@utr.edu.mx",
+                level: "TSU",
+                levelLabel: "TSU (Técnico Superior Universitario)",
+                career: "Mecatrónica",
+                specialty: "Automatización",
+                quarter: "5° Cuatrimestre",
+                offer: "Programación de PLC Siemens TIA Portal y Neumática",
+                seek: "Inglés Conversacional B1 (Preparación entrevista estadías)"
+            };
+            enterApp();
+            showToast("¡Bienvenido de nuevo, Carlos! Perfil TSU Mecatrónica cargado.");
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            quickDemoLogin();
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const level = document.getElementById('reg-level').value;
+            const name = document.getElementById('reg-name').value.trim();
+            const matricula = document.getElementById('reg-matricula').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const quarter = document.getElementById('reg-quarter').value;
+            const career = document.getElementById('reg-career').value;
+            const specialty = document.getElementById('reg-specialty').value;
+            const offer = document.getElementById('reg-offer').value.trim();
+            const seek = document.getElementById('reg-seek').value.trim();
+
+            currentUser = {
+                name,
+                matricula,
+                email,
+                level,
+                levelLabel: UTR_ACADEMIC_STRUCTURE[level].label,
+                career,
+                specialty,
+                quarter,
+                offer,
+                seek
+            };
+
+            // Agregar automáticamente su primer trueque al tablero
+            swapsData.unshift({
+                id: Date.now(),
+                studentName: name,
+                matricula: matricula,
+                avatar: getInitials(name),
+                level: level,
+                career: career,
+                specialty: specialty,
+                quarter: quarter,
+                rating: 5.0,
+                seek: seek,
+                offer: offer,
+                description: `¡Hola comunidad UTR! Soy de ${career} (${specialty}) y busco intercambiar conocimientos.`,
+                modality: "Presencial (Biblioteca / Cafetería UTR)"
+            });
+
+            enterApp();
+            showToast(`¡Registro exitoso! Bienvenido(a) a Skill Swap UTR, ${name}.`);
+        }
+
+        function enterApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-shell').classList.remove('hidden');
+            updateUserUI();
+            navigateTo('board');
+            renderSwaps();
+            renderCommunity();
+            renderProfileSessions();
+            lucide.createIcons();
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('app-shell').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            showToast("Has cerrado sesión institucional.");
+        }
+
+        function updateUserUI() {
+            const initials = getInitials(currentUser.name);
+            document.getElementById('nav-user-avatar').textContent = initials;
+            document.getElementById('nav-user-name').textContent = currentUser.name;
+            document.getElementById('nav-user-career').textContent = `${currentUser.career} • ${currentUser.specialty}`;
+
+            // Perfil
+            document.getElementById('profile-avatar').textContent = initials;
+            document.getElementById('profile-name').textContent = currentUser.name;
+            document.getElementById('profile-email').textContent = currentUser.email;
+            document.getElementById('profile-matricula-badge').textContent = `Matrícula UTR: #${currentUser.matricula}`;
+            document.getElementById('profile-level').textContent = currentUser.levelLabel;
+            document.getElementById('profile-career').textContent = currentUser.career;
+            document.getElementById('profile-specialty').textContent = currentUser.specialty;
+            document.getElementById('profile-quarter').textContent = currentUser.quarter;
+            document.getElementById('profile-offer').textContent = currentUser.offer;
+            document.getElementById('profile-seek').textContent = currentUser.seek;
+        }
+
+        // 5. NAVEGACIÓN SPA
+        function navigateTo(viewId) {
+            const views = ['board', 'community', 'how', 'profile'];
+            views.forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+            });
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            // Actualizar estilos botones desktop
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.nav === viewId) {
+                    btn.className = "nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 bg-utr-burgundy text-white shadow-xs";
+                } else {
+                    btn.className = "nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 text-stone-600 hover:text-utr-charcoal hover:bg-white/60";
+                }
+            });
+
+            // Actualizar estilos botones móvil
+            document.querySelectorAll('.nav-btn-mob').forEach(btn => {
+                if (btn.dataset.nav === viewId) {
+                    btn.className = "nav-btn-mob flex flex-col items-center py-1 px-3 rounded-xl text-[11px] font-bold text-utr-burgundy bg-utr-burgundy/10";
+                } else {
+                    btn.className = "nav-btn-mob flex flex-col items-center py-1 px-3 rounded-xl text-[11px] font-semibold text-stone-500";
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            lucide.createIcons();
+        }
+
+        // 6. TABLERO DE TRUEQUE Y FILTROS MULTINIVEL
+        function populateFilterCareers() {
+            const level = document.getElementById('filter-level').value;
+            const careerSelect = document.getElementById('filter-career');
+            const specSelect = document.getElementById('filter-specialty');
+
+            let options = `<option value="ALL">Todas las Carreras</option>`;
+            if (level === 'ALL') {
+                Object.keys(UTR_ACADEMIC_STRUCTURE.TSU.careers).forEach(c => {
+                    options += `<option value="${c}">TSU: ${c}</option>`;
+                });
+                Object.keys(UTR_ACADEMIC_STRUCTURE.LIC_ING.careers).forEach(c => {
+                    options += `<option value="${c}">${c}</option>`;
+                });
+            } else {
+                Object.keys(UTR_ACADEMIC_STRUCTURE[level].careers).forEach(c => {
+                    options += `<option value="${c}">${c}</option>`;
+                });
+            }
+            careerSelect.innerHTML = options;
+            specSelect.innerHTML = `<option value="ALL">Todas las Especialidades</option>`;
+        }
+
+        function handleFilterLevelChange() {
+            populateFilterCareers();
+            renderSwaps();
+        }
+
+        function handleFilterCareerChange() {
+            const career = document.getElementById('filter-career').value;
+            const specSelect = document.getElementById('filter-specialty');
+
+            if (career === 'ALL') {
+                specSelect.innerHTML = `<option value="ALL">Todas las Especialidades</option>`;
+            } else {
+                const specs = UTR_ACADEMIC_STRUCTURE.TSU.careers[career]?.specialties ||
+                              UTR_ACADEMIC_STRUCTURE.LIC_ING.careers[career]?.specialties || [];
+                specSelect.innerHTML = `<option value="ALL">Todas las Especialidades</option>` +
+                    specs.map(s => `<option value="${s}">${s}</option>`).join('');
+            }
+            renderSwaps();
+        }
+
+        function quickSearchTag(tag) {
+            document.getElementById('filter-search').value = tag;
+            renderSwaps();
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-level').value = 'ALL';
+            populateFilterCareers();
+            renderSwaps();
+        }
+
+        function renderSwaps() {
+            const query = document.getElementById('filter-search').value.toLowerCase().trim();
+            const levelFilter = document.getElementById('filter-level').value;
+            const careerFilter = document.getElementById('filter-career').value;
+            const specFilter = document.getElementById('filter-specialty').value;
+
+            const filtered = swapsData.filter(item => {
+                const matchQuery = !query ||
+                    item.seek.toLowerCase().includes(query) ||
+                    item.offer.toLowerCase().includes(query) ||
+                    item.description.toLowerCase().includes(query) ||
+                    item.studentName.toLowerCase().includes(query) ||
+                    item.specialty.toLowerCase().includes(query);
+
+                const matchLevel = levelFilter === 'ALL' || item.level === levelFilter;
+                const matchCareer = careerFilter === 'ALL' || item.career === careerFilter;
+                const matchSpec = specFilter === 'ALL' || item.specialty === specFilter;
+
+                return matchQuery && matchLevel && matchCareer && matchSpec;
+            });
+
+            document.getElementById('swaps-count').textContent = `Mostrando ${filtered.length} trueque${filtered.length === 1 ? '' : 's'}`;
+            const grid = document.getElementById('swaps-grid');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white rounded-3xl p-12 text-center border border-stone-200">
+                        <div class="w-14 h-14 rounded-2xl bg-utr-bg text-stone-400 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="search-x" class="w-7 h-7"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-utr-charcoal">No encontramos trueques con esos filtros</h3>
+                        <p class="text-sm text-stone-500 mt-1 mb-4">Intenta buscar otra materia o limpia los filtros activos.</p>
+                        <button onclick="resetFilters()" class="px-5 py-2.5 rounded-xl bg-utr-burgundy text-white text-sm font-semibold">Ver todos los trueques</button>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = filtered.map(swap => {
+                const levelBadge = swap.level === 'TSU' ? 'TSU' : 'LIC / ING';
+                return `
+                <article class="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <!-- Header Estudiante -->
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-utr-burgundy text-white font-display font-bold text-sm flex items-center justify-center shrink-0">
+                                    ${swap.avatar}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-utr-charcoal leading-snug">${swap.studentName}</h3>
+                                    <p class="text-xs font-semibold text-utr-burgundy mt-0.5">${swap.career}</p>
+                                    <p class="text-[11px] text-stone-500">${swap.specialty} • ${swap.quarter}</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end shrink-0">
+                                <span class="px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 font-bold text-[10px]">${levelBadge}</span>
+                                <span class="flex items-center gap-1 text-xs font-bold text-amber-600 mt-1">
+                                    <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
+                                    ${swap.rating.toFixed(1)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Etiquetas BUSCO / OFREZCO -->
+                        <div class="space-y-2.5 mb-4">
+                            <div class="p-3 rounded-2xl bg-utr-burgundy/8 border border-utr-burgundy/20">
+                                <span class="inline-block px-2 py-0.5 rounded-md bg-utr-burgundy text-white text-[10px] font-extrabold tracking-wider uppercase mb-1">
+                                    BUSCO APRENDER
+                                </span>
+                                <p class="text-xs sm:text-sm font-bold text-utr-charcoal leading-snug">${swap.seek}</p>
+                            </div>
+
+                            <div class="p-3 rounded-2xl bg-utr-gold/20 border border-utr-gold/45">
+                                <span class="inline-block px-2 py-0.5 rounded-md bg-utr-gold text-utr-charcoal text-[10px] font-extrabold tracking-wider uppercase mb-1">
+                                    OFREZCO A CAMBIO
+                                </span>
+                                <p class="text-xs sm:text-sm font-bold text-utr-charcoal leading-snug">${swap.offer}</p>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-stone-600 leading-relaxed mb-4">
+                            ${swap.description}
+                        </p>
+                    </div>
+
+                    <!-- Footer Tarjeta -->
+                    <div class="pt-4 border-t border-stone-100 space-y-3">
+                        <div class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-utr-burgundy shrink-0"></i>
+                            <span class="truncate">${swap.modality}</span>
+                        </div>
+                        <button onclick="openChatWith(${swap.id})" class="w-full py-3 rounded-2xl bg-utr-charcoal hover:bg-utr-burgundy text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-xs">
+                            <i data-lucide="message-circle" class="w-4 h-4 text-utr-goldLight"></i>
+                            Conectar / Proponer Trueque
+                        </button>
+                    </div>
+                </article>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // Modal Publicar Nuevo Trueque
+        function toggleNewSwapModal(show) {
+            const modal = document.getElementById('modal-new-swap');
+            modal.classList.toggle('hidden', !show);
+        }
+
+        function handleCreateSwap(e) {
+            e.preventDefault();
+            const seek = document.getElementById('swap-seek-input').value.trim();
+            const offer = document.getElementById('swap-offer-input').value.trim();
+            const description = document.getElementById('swap-desc-input').value.trim();
+            const modality = document.getElementById('swap-modality-input').value;
+
+            swapsData.unshift({
+                id: Date.now(),
+                studentName: currentUser.name,
+                matricula: currentUser.matricula,
+                avatar: getInitials(currentUser.name),
+                level: currentUser.level,
+                career: currentUser.career,
+                specialty: currentUser.specialty,
+                quarter: currentUser.quarter,
+                rating: 5.0,
+                seek,
+                offer,
+                description,
+                modality
+            });
+
+            e.target.reset();
+            toggleNewSwapModal(false);
+            renderSwaps();
+            showToast("¡Tu propuesta de trueque ya está visible para toda la UTR!");
+        }
+
+        // 7. COMUNIDAD UTR (EXPLORADOR JERÁRQUICO: NIVEL -> CARRERA -> ESPECIALIDAD -> MURO)
+        function selectCommunityTab(tab) {
+            commState.tab = tab;
+            commState.selectedCareer = null;
+            commState.selectedSpecialty = null;
+
+            ['TSU', 'LIC_ING', 'ESTADIAS'].forEach(t => {
+                const btn = document.getElementById(`comm-tab-${t}`);
+                if (t === tab) {
+                    btn.className = "flex-1 min-w-[160px] py-3 px-4 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 bg-utr-burgundy text-white shadow-xs";
+                } else {
+                    btn.className = "flex-1 min-w-[160px] py-3 px-4 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 text-stone-600 hover:bg-utr-bg";
+                }
+            });
+
+            renderCommunity();
+        }
+
+        function selectCommunityCareer(career) {
+            commState.selectedCareer = career;
+            const specialties = UTR_ACADEMIC_STRUCTURE[commState.tab].careers[career].specialties;
+            // Si la carrera solo tiene 1 especialidad, entramos directo a su muro; si tiene 2 (ej. Mecatrónica), mostramos selector de especialidad
+            if (specialties.length === 1) {
+                commState.selectedSpecialty = specialties[0];
+            } else {
+                commState.selectedSpecialty = null;
+            }
+            renderCommunity();
+        }
+
+        function selectCommunitySpecialty(specialty) {
+            commState.selectedSpecialty = specialty;
+            renderCommunity();
+        }
+
+        function renderCommunity() {
+            const explorer = document.getElementById('community-explorer');
+            const breadcrumb = document.getElementById('community-breadcrumb');
+
+            // CASO A: PESTAÑA ESTADÍAS Y PROYECTOS INTEGRADORES
+            if (commState.tab === 'ESTADIAS') {
+                breadcrumb.innerHTML = `<span class="text-utr-burgundy">Estadías (6° TSU y 11° Ing/Lic) y Proyectos Integradores</span>`;
+                const tips = communityTips.filter(t => t.level === 'ESTADIAS');
+                explorer.innerHTML = renderTipsWall(tips, "Consejos de Estadías y Proyectos Integradores UTR");
+                lucide.createIcons();
+                return;
+            }
+
+            const levelObj = UTR_ACADEMIC_STRUCTURE[commState.tab];
+
+            // PASO 1: MOSTRAR TARJETAS DE CARRERAS DEL NIVEL SELECCIONADO
+            if (!commState.selectedCareer) {
+                breadcrumb.innerHTML = `
+                    <span>Comunidad UTR</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    <span class="text-utr-burgundy">${levelObj.label}</span>
+                `;
+
+                const careersEntries = Object.entries(levelObj.careers);
+                explorer.innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        ${careersEntries.map(([careerName, data]) => {
+                            const countTips = communityTips.filter(t => t.level === commState.tab && t.career === careerName).length;
+                            const hasMultipleSpecs = data.specialties.length > 1;
+                            return `
+                            <div onclick="selectCommunityCareer('${careerName}')" class="bg-white rounded-3xl p-6 border border-stone-200 hover:border-utr-burgundy shadow-xs hover:shadow-md transition cursor-pointer group flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="w-12 h-12 rounded-2xl bg-utr-burgundy/10 group-hover:bg-utr-burgundy text-utr-burgundy group-hover:text-white transition flex items-center justify-center">
+                                            <i data-lucide="${data.icon}" class="w-6 h-6"></i>
+                                        </div>
+                                        <span class="px-2.5 py-1 rounded-full bg-utr-bg text-stone-600 font-bold text-xs">
+                                            ${countTips} consejo${countTips === 1 ? '' : 's'}
+                                        </span>
+                                    </div>
+                                    <h3 class="font-display font-bold text-lg text-utr-charcoal group-hover:text-utr-burgundy transition">${careerName}</h3>
+                                    <p class="text-xs text-stone-500 mt-1.5">
+                                        ${hasMultipleSpecs 
+                                            ? `<span class="text-utr-burgundy font-semibold">2 Especialidades a elegir:</span> ${data.specialties.join(' | ')}`
+                                            : `Especialidad: ${data.specialties[0]}`}
+                                    </p>
+                                </div>
+                                <div class="mt-5 pt-3 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-utr-burgundy">
+                                    <span>${hasMultipleSpecs ? 'Elegir especialidad' : 'Ver muro de consejos'}</span>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            // PASO 2: SI LA CARRERA TIENE MÚLTIPLES ESPECIALIDADES (EJ. TSU MECATRÓNICA) Y AÚN NO SE ELIGE UNA
+            if (commState.selectedCareer && !commState.selectedSpecialty) {
+                const specs = levelObj.careers[commState.selectedCareer].specialties;
+                breadcrumb.innerHTML = `
+                    <button onclick="selectCommunityTab('${commState.tab}')" class="hover:text-utr-burgundy underline">← Volver a Carreras</button>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    <span class="text-utr-burgundy">${commState.selectedCareer}</span>
+                `;
+
+                explorer.innerHTML = `
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs space-y-6">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-utr-goldDark">Paso 2 • Selecciona Área de Especialidad</span>
+                            <h3 class="font-display font-extrabold text-2xl text-utr-charcoal mt-1">${commState.selectedCareer}</h3>
+                            <p class="text-sm text-stone-600">Esta carrera cuenta con distintas ramas de especialización en la UTR. Elige una para ver consejos específicos:</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            ${specs.map(spec => {
+                                const specTipsCount = communityTips.filter(t => t.career === commState.selectedCareer && t.specialty === spec).length;
+                                return `
+                                <div onclick="selectCommunitySpecialty('${spec}')" class="p-6 rounded-2xl bg-utr-bg hover:bg-utr-gold/20 border-2 border-stone-200 hover:border-utr-burgundy cursor-pointer transition flex items-center justify-between">
+                                    <div>
+                                        <span class="text-[11px] font-bold uppercase text-utr-burgundy">Especialidad Oficial UTR</span>
+                                        <h4 class="font-display font-bold text-xl text-utr-charcoal mt-0.5">${spec}</h4>
+                                        <p class="text-xs text-stone-500 mt-1">${specTipsCount} consejos publicados por estudiantes</p>
+                                    </div>
+                                    <div class="w-10 h-10 rounded-xl bg-utr-burgundy text-white flex items-center justify-center shrink-0">
+                                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            // PASO 3: MURO ESPECÍFICO DE CONSEJOS DE LA ESPECIALIDAD
+            const hasMultiple = levelObj.careers[commState.selectedCareer].specialties.length > 1;
+            breadcrumb.innerHTML = `
+                <button onclick="selectCommunityTab('${commState.tab}')" class="hover:text-utr-burgundy underline">Carreras</button>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                ${hasMultiple 
+                    ? `<button onclick="commState.selectedSpecialty=null; renderCommunity()" class="hover:text-utr-burgundy underline">${commState.selectedCareer}</button>
+                       <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>` 
+                    : `<span>${commState.selectedCareer}</span> <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`}
+                <span class="text-utr-burgundy font-bold">${commState.selectedSpecialty}</span>
+            `;
+
+            const filteredTips = communityTips.filter(t => 
+                t.level === commState.tab && 
+                t.career === commState.selectedCareer && 
+                t.specialty === commState.selectedSpecialty
+            );
+
+            explorer.innerHTML = renderTipsWall(filteredTips, `${commState.selectedCareer} — ${commState.selectedSpecialty}`);
+            lucide.createIcons();
+        }
+
+        function renderTipsWall(tips, headerTitle) {
+            return `
+                <div class="space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-stone-200">
+                        <div>
+                            <h3 class="font-display font-bold text-lg text-utr-charcoal">${headerTitle}</h3>
+                            <p class="text-xs text-stone-500">Experiencias y recomendaciones verificadas por la comunidad UTR</p>
+                        </div>
+                        <button onclick="toggleNewTipModal(true)" class="px-4 py-2 rounded-xl bg-utr-burgundy text-white text-xs font-bold hover:bg-utr-burgundyDark transition self-start sm:self-auto">
+                            + Agregar Consejo Aquí
+                        </button>
+                    </div>
+
+                    ${tips.length === 0 ? `
+                        <div class="bg-white rounded-3xl p-10 text-center border border-stone-200">
+                            <p class="font-bold text-utr-charcoal">Aún no hay consejos en esta especialidad</p>
+                            <p class="text-xs text-stone-500 mt-1 mb-4">¡Sé el primer estudiante UTR en compartir un tip para tus compañeros!</p>
+                            <button onclick="toggleNewTipModal(true)" class="px-5 py-2.5 rounded-xl bg-utr-gold text-utr-charcoal font-bold text-xs">Escribir primer consejo</button>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            ${tips.map(tip => `
+                                <div class="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs flex flex-col justify-between space-y-4">
+                                    <div>
+                                        <div class="flex items-center justify-between gap-2 mb-3">
+                                            <span class="px-2.5 py-1 rounded-lg bg-utr-gold/25 text-utr-burgundy font-bold text-[11px]">${tip.tag}</span>
+                                            <span class="text-xs text-stone-400 font-medium">${tip.author}</span>
+                                        </div>
+                                        <h4 class="font-display font-bold text-base text-utr-charcoal mb-2">${tip.title}</h4>
+                                        <p class="text-sm text-stone-600 leading-relaxed">${tip.content}</p>
+                                    </div>
+                                    <div class="pt-3 border-t border-stone-100 flex items-center justify-between">
+                                        <button onclick="likeTip(${tip.id})" class="inline-flex items-center gap-1.5 text-xs font-bold text-utr-burgundy hover:bg-utr-burgundy/10 px-3 py-1.5 rounded-xl transition">
+                                            <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i>
+                                            Útil (${tip.likes})
+                                        </button>
+                                        <span class="text-[11px] text-stone-400">${tip.specialty}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function likeTip(tipId) {
+            const tip = communityTips.find(t => t.id === tipId);
+            if (tip) {
+                tip.likes++;
+                renderCommunity();
+                showToast("¡Gracias por valorar este consejo académico!");
+            }
+        }
+
+        // Modal Nuevo Consejo Comunidad
+        function toggleNewTipModal(show) {
+            document.getElementById('modal-new-tip').classList.toggle('hidden', !show);
+        }
+
+        function updateTipCareers() {
+            const level = document.getElementById('tip-level').value;
+            const wrapper = document.getElementById('tip-career-wrapper');
+            if (level === 'ESTADIAS') {
+                wrapper.classList.add('hidden');
+                return;
+            }
+            wrapper.classList.remove('hidden');
+            const careerSelect = document.getElementById('tip-career');
+            careerSelect.innerHTML = Object.keys(UTR_ACADEMIC_STRUCTURE[level].careers)
+                .map(c => `<option value="${c}">${c}</option>`).join('');
+            updateTipSpecialties();
+        }
+
+        function updateTipSpecialties() {
+            const level = document.getElementById('tip-level').value;
+            if (level === 'ESTADIAS') return;
+            const career = document.getElementById('tip-career').value;
+            const specs = UTR_ACADEMIC_STRUCTURE[level].careers[career]?.specialties || [];
+            document.getElementById('tip-specialty').innerHTML = specs
+                .map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        function handleCreateTip(e) {
+            e.preventDefault();
+            const level = document.getElementById('tip-level').value;
+            const career = level === 'ESTADIAS' ? 'General UTR' : document.getElementById('tip-career').value;
+            const specialty = level === 'ESTADIAS' ? '6° TSU y 11° Ingeniería/Licenciatura' : document.getElementById('tip-specialty').value;
+            const title = document.getElementById('tip-title').value.trim();
+            const tag = document.getElementById('tip-tag').value;
+            const content = document.getElementById('tip-content').value.trim();
+
+            communityTips.unshift({
+                id: Date.now(),
+                level,
+                career,
+                specialty,
+                author: `${currentUser.name} (${currentUser.quarter})`,
+                tag,
+                title,
+                content,
+                likes: 1
+            });
+
+            e.target.reset();
+            toggleNewTipModal(false);
+            commState.tab = level;
+            if (level !== 'ESTADIAS') {
+                commState.selectedCareer = career;
+                commState.selectedSpecialty = specialty;
+            }
+            selectCommunityTab(level);
+            if (level !== 'ESTADIAS') {
+                commState.selectedCareer = career;
+                commState.selectedSpecialty = specialty;
+                renderCommunity();
+            }
+            showToast("¡Consejo publicado en la Comunidad UTR!");
+        }
+
+        // 8. CHAT DIRECTO Y AGENDAMIENTO DE SESIONES
+        function toggleChatDrawer() {
+            const drawer = document.getElementById('chat-drawer');
+            drawer.classList.toggle('hidden');
+            if (!drawer.classList.contains('hidden')) {
+                renderChatContacts();
+                renderChatMessages();
+                lucide.createIcons();
+            }
+        }
+
+        function openChatWith(swapId) {
+            const swap = swapsData.find(s => s.id === swapId);
+            if (!swap) return;
+            activeChatPartner = swap;
+            if (!chatsHistory[swap.studentName]) {
+                chatsHistory[swap.studentName] = [
+                    { sender: "system", text: `Conectaste con ${swap.studentName} (${swap.career} - ${swap.specialty}).`, time: "Ahora" }
+                ];
+            }
+            const drawer = document.getElementById('chat-drawer');
+            drawer.classList.remove('hidden');
+            renderChatContacts();
+            renderChatMessages();
+            lucide.createIcons();
+        }
+
+        function renderChatContacts() {
+            const bar = document.getElementById('chat-contacts-bar');
+            const names = Object.keys(chatsHistory);
+            bar.innerHTML = names.map(name => {
+                const isSelected = activeChatPartner && activeChatPartner.studentName === name;
+                return `
+                    <button onclick="switchChatPartner('${name}')" class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition ${isSelected ? 'bg-utr-burgundy text-white' : 'bg-white text-stone-600 border border-stone-200'}">
+                        ${name.split(' ')[0]}
+                    </button>
+                `;
+            }).join('');
+
+            if (activeChatPartner) {
+                document.getElementById('chat-partner-avatar').textContent = activeChatPartner.avatar;
+                document.getElementById('chat-partner-name').textContent = activeChatPartner.studentName;
+                document.getElementById('chat-partner-career').textContent = `${activeChatPartner.career} • ${activeChatPartner.specialty}`;
+            }
+        }
+
+        function switchChatPartner(name) {
+            const found = swapsData.find(s => s.studentName === name);
+            if (found) {
+                activeChatPartner = found;
+                renderChatContacts();
+                renderChatMessages();
+            }
+        }
+
+        function renderChatMessages() {
+            if (!activeChatPartner) return;
+            const container = document.getElementById('chat-messages-container');
+            const msgs = chatsHistory[activeChatPartner.studentName] || [];
+
+            container.innerHTML = msgs.map(m => {
+                if (m.sender === 'system') {
+                    return `<div class="text-center"><span class="inline-block px-3 py-1 rounded-full bg-stone-200/70 text-[11px] text-stone-600">${m.text}</span></div>`;
+                }
+                if (m.sender === 'schedule') {
+                    return `
+                        <div class="bg-utr-gold/25 border border-utr-gold rounded-2xl p-3.5 text-xs space-y-1">
+                            <div class="font-extrabold text-utr-burgundy flex items-center gap-1.5">
+                                <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                                SESIÓN DE TRUEQUE AGENDADA
+                            </div>
+                            <p class="font-semibold text-utr-charcoal">${m.text}</p>
+                        </div>
+                    `;
+                }
+                const isMe = m.sender === 'me';
+                return `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                        <div class="max-w-[82%] px-4 py-2.5 rounded-2xl text-xs sm:text-sm ${isMe ? 'bg-utr-burgundy text-white rounded-br-xs' : 'bg-white border border-stone-200 text-utr-charcoal rounded-bl-xs'}">
+                            ${m.text}
+                        </div>
+                        <span class="text-[10px] text-stone-400 mt-1 px-1">${m.time}</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.scrollTop = container.scrollHeight;
+            lucide.createIcons();
+        }
+
+        function handleSendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !activeChatPartner) return;
+
+            pushMessageToActive(text);
+            input.value = '';
+        }
+
+        function sendQuickMessage(text) {
+            if (!activeChatPartner) return;
+            pushMessageToActive(text);
+        }
+
+        function pushMessageToActive(text) {
+            const partnerName = activeChatPartner.studentName;
+            chatsHistory[partnerName].push({
+                sender: 'me',
+                text,
+                time: 'Ahora'
+            });
+            renderChatMessages();
+
+            // Respuesta automática simulada para interactividad inmediata
+            setTimeout(() => {
+                chatsHistory[partnerName].push({
+                    sender: 'partner',
+                    text: "¡Excelente! Me parece perfecto, nos vemos ahí para repasar los temas. 🙌",
+                    time: 'Ahora'
+                });
+                renderChatMessages();
+            }, 900);
+        }
+
+        function toggleScheduleBox() {
+            document.getElementById('schedule-session-box').classList.toggle('hidden');
+        }
+
+        function handleScheduleSession(e) {
+            e.preventDefault();
+            if (!activeChatPartner) return;
+            const date = document.getElementById('sched-date').value;
+            const time = document.getElementById('sched-time').value;
+            const place = document.getElementById('sched-place').value;
+
+            const summary = `Fecha: ${date} a las ${time} hrs • Lugar: ${place}`;
+            chatsHistory[activeChatPartner.studentName].push({
+                sender: 'schedule',
+                text: summary,
+                time: 'Ahora'
+            });
+
+            scheduledSessions.unshift({
+                partner: activeChatPartner.studentName,
+                topic: `Trueque con ${activeChatPartner.career}`,
+                date,
+                time,
+                place
+            });
+
+            toggleScheduleBox();
+            renderChatMessages();
+            renderProfileSessions();
+            showToast("¡Sesión agendada y guardada en tu perfil!");
+        }
+
+        function renderProfileSessions() {
+            const list = document.getElementById('profile-sessions-list');
+            list.innerHTML = scheduledSessions.map(s => `
+                <div class="p-3 rounded-xl bg-utr-bg border border-stone-200 flex flex-col gap-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-xs text-utr-burgundy">${s.partner}</span>
+                        <span class="text-[11px] font-semibold text-stone-500">${s.date} • ${s.time}</span>
+                    </div>
+                    <p class="text-xs text-utr-charcoal font-medium">${s.topic}</p>
+                    <p class="text-[11px] text-stone-500 flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3 h-3"></i> ${s.place}
+                    </p>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 9. UTILIDADES
+        function getInitials(name) {
+            return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "pointer-events-auto bg-utr-charcoal text-white px-4 py-3 rounded-2xl shadow-lg border-l-4 border-utr-gold text-xs sm:text-sm font-medium flex items-center gap-2.5 max-w-sm";
+            toast.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-utr-gold shrink-0"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.remove();
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
